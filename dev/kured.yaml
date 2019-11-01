@@ -105,13 +105,13 @@ spec:
                   fieldPath: spec.nodeName
           command:
             - /usr/bin/kured
-           - --alert-filter-regexp=^RebootRequired$
-           - --blocking-pod-selector=runtime=long,cost=expensive
-           - --blocking-pod-selector=name=temperamental
-           - --blocking-pod-selector=...
-           - --ds-name=kured
-           - --ds-namespace=kube-system
-           - --lock-annotation=weave.works/kured-node-lock
-           - --period=1h
-           - --prometheus-url=http://prometheus.monitoring.svc.cluster.local
-           - --reboot-sentinel=/var/run/reboot-required
+            - --alert-filter-regexp=^RebootRequired$
+            - --blocking-pod-selector=runtime=long,cost=expensive
+            - --blocking-pod-selector=name=temperamental
+            - --blocking-pod-selector=...
+            - --ds-name=kured
+            - --ds-namespace=kube-system
+            - --lock-annotation=weave.works/kured-node-lock
+            - --period=1h
+            - --prometheus-url=http://prometheus.monitoring.svc.cluster.local
+            - --reboot-sentinel=/var/run/reboot-required
