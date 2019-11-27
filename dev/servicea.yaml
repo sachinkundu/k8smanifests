@@ -53,7 +53,7 @@ spec:
         fsGroup: 2000
       containers:
         - name: k8s-cncf-hel-demo
-          image: "sachinkundu/k8s-cncf-hel-demo:236"
+          image: "sachinkundu/k8s-cncf-hel-demo:238"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -83,7 +83,7 @@ spec:
     kind: Deployment
     name: servicea-k8s-cncf-hel-demo
   service:
-    port: 80
+    port: 5000
   canaryAnalysis:
     interval: 10s
     stepWeight: 5
