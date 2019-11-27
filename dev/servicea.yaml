@@ -53,7 +53,7 @@ spec:
         fsGroup: 2000
       containers:
         - name: k8s-cncf-hel-demo
-          image: "sachinkundu/k8s-cncf-hel-demo:234"
+          image: "sachinkundu/k8s-cncf-hel-demo:236"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
