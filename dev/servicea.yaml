@@ -1,0 +1,70 @@
+---
+---
+# Source: k8s-cncf-hel-demo/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicea-k8s-cncf-hel-demo
+  labels:
+    app.kubernetes.io/name: k8s-cncf-hel-demo
+    helm.sh/chart: k8s-cncf-hel-demo-0.1.0
+    app.kubernetes.io/instance: servicea
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Tiller
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 5000
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: k8s-cncf-hel-demo
+    app.kubernetes.io/instance: servicea
+---
+
+# Source: k8s-cncf-hel-demo/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicea-k8s-cncf-hel-demo
+  labels:
+    app.kubernetes.io/name: k8s-cncf-hel-demo
+    helm.sh/chart: k8s-cncf-hel-demo-0.1.0
+    app.kubernetes.io/instance: servicea
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Tiller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: k8s-cncf-hel-demo
+      app.kubernetes.io/instance: servicea
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: k8s-cncf-hel-demo
+        app.kubernetes.io/instance: servicea
+    spec:
+      restartPolicy: Always
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+      containers:
+        - name: k8s-cncf-hel-demo
+          image: "sachinkundu/k8s-cncf-hel-demo:210"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          resources:
+            {}
+            
+          env:
+          - name: myVariable
+            value: "Hello World"
+
