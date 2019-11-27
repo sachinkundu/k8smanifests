@@ -1,4 +1,5 @@
 ---
+---
 ###
 ### Linkerd Namespace
 ###
@@ -3246,3 +3247,4 @@ spec:
         secret:
           secretName: linkerd-tap-tls
 ---
+

@@ -1,0 +1,549 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: flagger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: flagger
+    helm.sh/chart: flagger-0.20.3
+  name: flagger
+  namespace: linkerd
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+  name: canaries.flagger.app
+  namespace: linkerd
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    name: Status
+    type: string
+  - JSONPath: .status.canaryWeight
+    name: Weight
+    type: string
+  - JSONPath: .status.failedChecks
+    name: FailedChecks
+    priority: 1
+    type: string
+  - JSONPath: .spec.canaryAnalysis.interval
+    name: Interval
+    priority: 1
+    type: string
+  - JSONPath: .spec.canaryAnalysis.mirror
+    name: Mirror
+    priority: 1
+    type: boolean
+  - JSONPath: .spec.canaryAnalysis.stepWeight
+    name: StepWeight
+    priority: 1
+    type: string
+  - JSONPath: .spec.canaryAnalysis.maxWeight
+    name: MaxWeight
+    priority: 1
+    type: string
+  - JSONPath: .status.lastTransitionTime
+    name: LastTransitionTime
+    type: string
+  group: flagger.app
+  names:
+    categories:
+    - all
+    kind: Canary
+    plural: canaries
+    singular: canary
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            autoscalerRef:
+              anyOf:
+              - type: string
+              - type: object
+              description: HPA selector
+              properties:
+                apiVersion:
+                  type: string
+                kind:
+                  type: string
+                name:
+                  type: string
+              required:
+              - apiVersion
+              - kind
+              - name
+            canaryAnalysis:
+              properties:
+                interval:
+                  description: Canary schedule interval
+                  pattern: ^[0-9]+(m|s)
+                  type: string
+                iterations:
+                  description: Number of checks to run for A/B Testing and Blue/Green
+                  type: number
+                match:
+                  anyOf:
+                  - type: string
+                  - type: array
+                  description: A/B testing match conditions
+                maxWeight:
+                  description: Max traffic percentage routed to canary
+                  type: number
+                metrics:
+                  description: Prometheus query list for this canary
+                  properties:
+                    items:
+                      properties:
+                        interval:
+                          description: Interval of the promql query
+                          pattern: ^[0-9]+(m|s)
+                          type: string
+                        name:
+                          description: Name of the Prometheus metric
+                          type: string
+                        query:
+                          description: Prometheus query
+                          type: string
+                        threshold:
+                          description: Max scalar value accepted for this metric
+                          type: number
+                      required:
+                      - name
+                      - threshold
+                      type: object
+                  type: array
+                mirror:
+                  description: Mirror traffic to canary before shifting
+                  type: boolean
+                stepWeight:
+                  description: Canary incremental traffic percentage step
+                  type: number
+                threshold:
+                  description: Max number of failed checks before rollback
+                  type: number
+                webhooks:
+                  description: Webhook list for this canary
+                  properties:
+                    items:
+                      properties:
+                        metadata:
+                          anyOf:
+                          - type: string
+                          - type: object
+                          description: Metadata (key-value pairs) for this webhook
+                        name:
+                          description: Name of the webhook
+                          type: string
+                        timeout:
+                          description: Request timeout for this webhook
+                          pattern: ^[0-9]+(m|s)
+                          type: string
+                        type:
+                          description: Type of the webhook pre, post or during rollout
+                          enum:
+                          - ""
+                          - confirm-rollout
+                          - pre-rollout
+                          - rollout
+                          - confirm-promotion
+                          - post-rollout
+                          type: string
+                        url:
+                          description: URL address of this webhook
+                          format: url
+                          type: string
+                      required:
+                      - name
+                      - url
+                      type: object
+                  type: array
+            ingressRef:
+              anyOf:
+              - type: string
+              - type: object
+              description: NGINX ingress selector
+              properties:
+                apiVersion:
+                  type: string
+                kind:
+                  type: string
+                name:
+                  type: string
+              required:
+              - apiVersion
+              - kind
+              - name
+            metricsServer:
+              description: Prometheus URL
+              type: string
+            progressDeadlineSeconds:
+              description: Deployment progress deadline
+              type: number
+            provider:
+              description: Traffic managent provider
+              type: string
+            service:
+              properties:
+                backends:
+                  anyOf:
+                  - type: string
+                  - type: array
+                  description: AppMesh backend array
+                corsPolicy:
+                  anyOf:
+                  - type: string
+                  - type: object
+                  description: Istio CORS policy
+                gateways:
+                  anyOf:
+                  - type: string
+                  - type: array
+                  description: Istio gateways list
+                headers:
+                  anyOf:
+                  - type: string
+                  - type: object
+                  description: Istio headers operations
+                hosts:
+                  anyOf:
+                  - type: string
+                  - type: array
+                  description: Istio hosts list
+                match:
+                  anyOf:
+                  - type: string
+                  - type: array
+                  description: Istio URL match conditions
+                meshName:
+                  description: AppMesh mesh name
+                  type: string
+                port:
+                  description: Container port number
+                  type: number
+                portDiscovery:
+                  description: Enable port dicovery
+                  type: boolean
+                portName:
+                  description: Container port name
+                  type: string
+                rewrite:
+                  anyOf:
+                  - type: string
+                  - type: object
+                  description: Istio URL rewrite
+                targetPort:
+                  anyOf:
+                  - type: string
+                  - type: number
+                  description: Container target port name
+                timeout:
+                  description: Istio HTTP or gRPC request timeout
+                  type: string
+                trafficPolicy:
+                  anyOf:
+                  - type: string
+                  - type: object
+                  description: Istio traffic policy
+              required:
+              - port
+              type: object
+            skipAnalysis:
+              type: boolean
+            targetRef:
+              description: Deployment selector
+              properties:
+                apiVersion:
+                  type: string
+                kind:
+                  type: string
+                name:
+                  type: string
+              required:
+              - apiVersion
+              - kind
+              - name
+              type: object
+          required:
+          - targetRef
+          - service
+          - canaryAnalysis
+        status:
+          properties:
+            canaryWeight:
+              description: Traffic weight percentage routed to canary
+              type: number
+            conditions:
+              description: Status conditions of this canary
+              properties:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime of this condition
+                      format: date-time
+                      type: string
+                    lastUpdateTime:
+                      description: LastUpdateTime of this condition
+                      format: date-time
+                      type: string
+                    message:
+                      description: Message associated with this condition
+                      type: string
+                    reason:
+                      description: Reason for the current status of this condition
+                      type: string
+                    status:
+                      description: Status of this condition
+                      type: string
+                    type:
+                      description: Type of this condition
+                      type: string
+                  required:
+                  - type
+                  - status
+                  - reason
+                  type: object
+              type: array
+            failedChecks:
+              description: Failed check count of the current canary analysis
+              type: number
+            iterations:
+              description: Iteration count of the current canary analysis
+              type: number
+            lastAppliedSpec:
+              description: LastAppliedSpec of this canary
+              type: string
+            lastTransitionTime:
+              description: LastTransitionTime of this canary
+              format: date-time
+              type: string
+            phase:
+              description: Analysis phase of this canary
+              enum:
+              - ""
+              - Initializing
+              - Initialized
+              - Waiting
+              - Progressing
+              - Promoting
+              - Finalising
+              - Succeeded
+              - Failed
+              type: string
+  version: v1alpha3
+  versions:
+  - name: v1alpha3
+    served: true
+    storage: true
+  - name: v1alpha2
+    served: true
+    storage: false
+  - name: v1alpha1
+    served: true
+    storage: false
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: flagger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: flagger
+    helm.sh/chart: flagger-0.20.3
+  name: flagger
+  namespace: linkerd
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  - configmaps
+  - secrets
+  - services
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - '*'
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - '*'
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  - ingresses/status
+  verbs:
+  - '*'
+- apiGroups:
+  - flagger.app
+  resources:
+  - canaries
+  - canaries/status
+  verbs:
+  - '*'
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - virtualservices
+  - virtualservices/status
+  - destinationrules
+  - destinationrules/status
+  verbs:
+  - '*'
+- apiGroups:
+  - appmesh.k8s.aws
+  resources:
+  - meshes
+  - meshes/status
+  - virtualnodes
+  - virtualnodes/status
+  - virtualservices
+  - virtualservices/status
+  verbs:
+  - '*'
+- apiGroups:
+  - split.smi-spec.io
+  resources:
+  - trafficsplits
+  verbs:
+  - '*'
+- apiGroups:
+  - gloo.solo.io
+  resources:
+  - settings
+  - upstreams
+  - upstreamgroups
+  - proxies
+  - virtualservices
+  verbs:
+  - '*'
+- apiGroups:
+  - gateway.solo.io
+  resources:
+  - virtualservices
+  - gateways
+  verbs:
+  - '*'
+- nonResourceURLs:
+  - /version
+  verbs:
+  - get
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: flagger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: flagger
+    helm.sh/chart: flagger-0.20.3
+  name: flagger
+  namespace: linkerd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flagger
+subjects:
+- kind: ServiceAccount
+  name: flagger
+  namespace: linkerd
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: flagger
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: flagger
+    helm.sh/chart: flagger-0.20.3
+  name: flagger
+  namespace: linkerd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: flagger
+      app.kubernetes.io/name: flagger
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        appmesh.k8s.aws/sidecarInjectorWebhook: disabled
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/instance: flagger
+        app.kubernetes.io/name: flagger
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/instance: flagger
+                  app.kubernetes.io/name: flagger
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - command:
+        - ./flagger
+        - -log-level=info
+        - -mesh-provider=linkerd
+        - -metrics-server=http://linkerd-prometheus:9090
+        image: weaveworks/flagger:0.20.3
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - wget
+            - --quiet
+            - --tries=1
+            - --timeout=4
+            - --spider
+            - http://localhost:8080/healthz
+          timeoutSeconds: 5
+        name: flagger
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          exec:
+            command:
+            - wget
+            - --quiet
+            - --tries=1
+            - --timeout=4
+            - --spider
+            - http://localhost:8080/healthz
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 10001
+      serviceAccountName: flagger
+
