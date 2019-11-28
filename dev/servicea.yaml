@@ -45,6 +45,8 @@ spec:
       labels:
         app.kubernetes.io/name: k8s-cncf-hel-demo
         app.kubernetes.io/instance: servicea
+      annotations:
+        linkerd.io/inject: enabled
     spec:
       restartPolicy: Always
       securityContext:
@@ -53,7 +55,7 @@ spec:
         fsGroup: 2000
       containers:
         - name: k8s-cncf-hel-demo
-          image: "sachinkundu/k8s-cncf-hel-demo:246"
+          image: "sachinkundu/k8s-cncf-hel-demo:248"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
