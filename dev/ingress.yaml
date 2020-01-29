@@ -6,7 +6,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     heritage: Tiller
     release: ingress
   name: ingress-nginx-ingress
@@ -19,7 +19,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     heritage: Tiller
     release: ingress
   name: ingress-nginx-ingress-backend
@@ -27,12 +27,12 @@ metadata:
 ---
 
 # Source: nginx-ingress/templates/clusterrole.yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     heritage: Tiller
     release: ingress
   name: ingress-nginx-ingress
@@ -89,12 +89,12 @@ rules:
 ---
 
 # Source: nginx-ingress/templates/clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     heritage: Tiller
     release: ingress
   name: ingress-nginx-ingress
@@ -109,12 +109,12 @@ subjects:
 ---
 
 # Source: nginx-ingress/templates/controller-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     heritage: Tiller
     release: ingress
   name: ingress-nginx-ingress
@@ -194,12 +194,12 @@ rules:
 ---
 
 # Source: nginx-ingress/templates/controller-rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     heritage: Tiller
     release: ingress
   name: ingress-nginx-ingress
@@ -220,7 +220,7 @@ kind: Service
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     component: "controller"
     heritage: Tiller
     release: ingress
@@ -250,7 +250,7 @@ kind: Service
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     component: "default-backend"
     heritage: Tiller
     release: ingress
@@ -276,11 +276,14 @@ kind: Deployment
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     component: "controller"
     heritage: Tiller
     release: ingress
   name: ingress-nginx-ingress-controller
+  annotations:
+    {}
+    
 spec:
   selector:
     matchLabels:
@@ -304,7 +307,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: nginx-ingress-controller
-          image: "quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.26.1"
+          image: "quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.27.1"
           imagePullPolicy: "IfNotPresent"
           args:
             - /nginx-ingress-controller
@@ -318,7 +321,7 @@ spec:
                 - ALL
                 add:
                 - NET_BIND_SERVICE
-            runAsUser: 33
+            runAsUser: 101
             allowPrivilegeEscalation: true
           env:
             - name: POD_NAME
@@ -372,7 +375,7 @@ kind: Deployment
 metadata:
   labels:
     app: nginx-ingress
-    chart: nginx-ingress-1.26.1
+    chart: nginx-ingress-1.29.5
     component: "default-backend"
     heritage: Tiller
     release: ingress
