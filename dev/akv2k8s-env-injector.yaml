@@ -1,0 +1,202 @@
+---
+---
+# Source: azure-key-vault-env-injector/templates/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: default
+  name: akv2k8s-env-injector-azure-key-vault-env-injector
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: akv2k8s-env-injector-azure-key-vault-env-injector
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  namespace: default
+  name: akv2k8s-env-injector-azure-key-vault-env-injector
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: akv2k8s-env-injector-azure-key-vault-env-injector-reader
+rules:
+- apiGroups:
+  - spv.no
+  resources:
+  - azurekeyvaultsecrets
+  verbs:
+  - get
+  - list
+  - watch
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: akv2k8s-env-injector-azure-key-vault-env-injector-reader
+subjects:
+- kind: Group
+  name: system:serviceaccounts
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: akv2k8s-env-injector-azure-key-vault-env-injector-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+
+# Source: azure-key-vault-env-injector/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: akv2k8s-env-injector-azure-key-vault-env-injector
+  labels:
+    app: akv2k8s-env-injector-azure-key-vault-env-injector
+    chart: azure-key-vault-env-injector-0.1.5
+    release: akv2k8s-env-injector
+    heritage: Tiller
+    component: mutating
+spec:
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+      name: azure-keyvault-secrets-webhook
+  selector:
+    app: azure-key-vault-env-injector
+    release: akv2k8s-env-injector
+
+---
+
+# Source: azure-key-vault-env-injector/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: akv2k8s-env-injector-azure-key-vault-env-injector
+  labels:
+    app: azure-key-vault-env-injector
+    chart: azure-key-vault-env-injector-0.1.5
+    release: akv2k8s-env-injector
+    heritage: Tiller
+    component: webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-key-vault-env-injector
+      release: akv2k8s-env-injector
+  template:
+    metadata:
+      labels:
+        app: azure-key-vault-env-injector
+        release: akv2k8s-env-injector
+      annotations:
+        checksum/config: e602b420de59025c8afc41df08c35b0594cdfe358c639bfeca9d0ecfa2164486
+    spec:
+      serviceAccountName: akv2k8s-env-injector-azure-key-vault-env-injector
+      volumes:
+      - name: serving-cert
+        secret:
+          defaultMode: 420
+          secretName: akv2k8s-env-injector-azure-key-vault-env-injector
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
+          type: File
+      - name: azureconf
+        hostPath:
+          path: /etc/kubernetes/azure.json
+          type: File
+      containers:
+        - name: azure-key-vault-env-injector
+          image: "spvest/azure-keyvault-webhook:0.1.15"
+          env:
+          - name: TLS_CERT_FILE
+            value: /var/serving-cert/servingCert
+          - name: TLS_PRIVATE_KEY_FILE
+            value: /var/serving-cert/servingKey
+          - name: AZUREKEYVAULT_ENV_IMAGE
+            value: spvest/azure-keyvault-env:0.1.15
+          - name: AAD_POD_BINDING_LABEL
+            valueFrom:
+              fieldRef:
+                fieldPath:  metadata.labels['aadpodidbinding']
+          - name: DEBUG
+            value: "false"
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 443
+          volumeMounts:
+          - mountPath: /var/serving-cert
+            name: serving-cert
+          - mountPath: /var/run/docker.sock
+            name: dockersock
+            readOnly: true
+          - mountPath: /etc/kubernetes/azure.json
+            name: azureconf
+            readOnly: true
+          resources:
+            {}
+            
+
+---
+
+# Source: azure-key-vault-env-injector/templates/apiservice.yaml
+
+
+
+
+
+apiVersion: v1
+kind: List
+metadata:
+items:
+
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: akv2k8s-env-injector-azure-key-vault-env-injector
+  data:
+    servingCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURKakNDQWc2Z0F3SUJBZ0lRRW1rM1FMMmdHRTFVVERQR1hmdEpqekFOQmdrcWhraUc5dzBCQVFzRkFEQVYKTVJNd0VRWURWUVFERXdwemRtTXRZMkYwTFdOaE1CNFhEVEl3TURJeE1qQTNNRFV4TWxvWERUSXhNREl4TVRBMwpNRFV4TWxvd1NERkdNRVFHQTFVRUF4TTlZV3QyTW1zNGN5MWxibll0YVc1cVpXTjBiM0l0WVhwMWNtVXRhMlY1CkxYWmhkV3gwTFdWdWRpMXBibXBsWTNSdmNpNWtaV1poZFd4MExuTjJZekNDQVNJd0RRWUpLb1pJaHZjTkFRRUIKQlFBRGdnRVBBRENDQVFvQ2dnRUJBS29PbEJtOU9aV08vSzdSa2dUb3dmOUFKTHJrT0VyL1JHcHlIVGhTdXRsTgpHZ09INmJWSHZhZDQ2d3Y2UWh5MTRxM0tVb09QdVhRTFRJR2x0b1JWcDZpU2wyRGhrY2Z5YzcraHNMZlUrOUxaClBLODl3SU5RRThsRHpFY2JVbmFWNitvMnlSb25FL24xd2pGYTk3dGU5bVpWL2s5QVdXaUdDejlRRm9rMEdmMHkKK2swdTJ6cFUwZlVXUlVNN3J4cG1KYnh4U3NYMklDZ29Nbjc1b2duTmdYTXA1UWVBVjN6OUFTaXhqN2VaSzZ4dwplK2VzRVg2L1A2NTlWL1pOallHTGhQRFFqS2RrUDJhMnp2S3BjclZvNzR5eERjRnV3UHlrNzJ3cGp3Wkl1eEJxClN0WjIwLzlkdUdBbjZIWGN6R0Nub1lCTlFNYStkR0sva3UvNmZSY2lYdEVDQXdFQUFhTS9NRDB3RGdZRFZSMFAKQVFIL0JBUURBZ1dnTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQkJnZ3JCZ0VGQlFjREFqQU1CZ05WSFJNQgpBZjhFQWpBQU1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQ2M5TEI5QlhTaUhYZ243bmFvYmV5eTM3cjgwZW1lCnhKcVNsQkI1bXkwVUlsN1N4Si81ei9na3BBZXN2R0h5d0lvWGdPMVNBTmx4MjU2M1lwbkdNaGtpK21LYTcrQ1oKOVVpRDhPemh5Vzhla2lrMEhIZ3AwRVZZM2diTzE4ald3Nk1zOEYySVdubmxGaVNOekkzM244RjBzZWFqTlkySQpsUHNyenMxY0d6a2FjKytHbXNrRFpKVHMxaWdNdFN0bm9xNE1BWGdEWnNkcjgvU0dGcEVoaWJENWJodkNvUTltCmJraU54OEFWMG5wZGV0bEdvNHQrK2lkMWUxSlVYZUljOUhIU1V4TDkyem9CUGJkVzBtMUZTbGVrM3duRk5wVXgKY0NFS0Nva3lFV3IyUDg0WElVaUFKaGI0by9tNkFlQ1JLakhmZkZmTENjbHZCbzJVL044YVBpWEEKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    servingKey: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBcWc2VUdiMDVsWTc4cnRHU0JPakIvMEFrdXVRNFN2OUVhbklkT0ZLNjJVMGFBNGZwCnRVZTlwM2pyQy9wQ0hMWGlyY3BTZzQrNWRBdE1nYVcyaEZXbnFKS1hZT0dSeC9KenY2R3d0OVQ3MHRrOHJ6M0EKZzFBVHlVUE1SeHRTZHBYcjZqYkpHaWNUK2ZYQ01WcjN1MTcyWmxYK1QwQlphSVlMUDFBV2lUUVovVEw2VFM3YgpPbFRSOVJaRlF6dXZHbVlsdkhGS3hmWWdLQ2d5ZnZtaUNjMkJjeW5sQjRCWGZQMEJLTEdQdDVrcnJIQjc1NndSCmZyOC9ybjFYOWsyTmdZdUU4TkNNcDJRL1pyYk84cWx5dFdqdmpMRU53VzdBL0tUdmJDbVBCa2k3RUdwSzFuYlQKLzEyNFlDZm9kZHpNWUtlaGdFMUF4cjUwWXIrUzcvcDlGeUplMFFJREFRQUJBb0lCQUdydGI4SWZjUzNSRXFENQp0VTdRNitxTGNvenhJMVJFM2Nmd3FON1paaE5zbjRiSTF2TGRnU3JrcFNhSzNUY2dSci93RDZJWnBRcUtjRGkwCjhlYVQxUy94dksxMktDd0pEeTdYaEQ2UzlTVEc0NWxzd3JmT2lpSnJOdThmQnVMNXNiVTdiWWU4T3B0WkpCblUKa1NDSHZYYnJhMVI1cWI1SFNwc3N5SDdNKytwd05NT0c0bXY5UDZTQlh3YlJqWG9ROERxRVZSa1JBK0h5cUNjbwpXM2prZmlmMEF5YVRaNzQ3V2V0S1lBNUtwU2NNcUVsdTNJMEkrb2xDRklYa0VHemV1MmdrS2ZjMm4wN0RDMGYwCm5RK25XbnFZL1NOcHlNZEYrUktmVGdoSkZoQ0ljZFNBTmF6dExwVkN6ZlhsRmFGVXBYem53MFNVWWduY2tZNjMKdG91WlZJRUNnWUVBMlpLMmhDeExvWHk4K3pxVkR1dlllWTBEODRLbHo5ZG9MYzE3RG5DR0NnYjhNMDBoUXBaeApWV3IvVVVXRjB1RlpxVWZvREZZTkJGUFlDTktiRDZSQkdvRWpKSHlzZnltUVpVMzVkMlU0YVAvYVdmZkYvUWc0CmZYK1M5eEZFcFN6Mm1rTUhWU2NGWWJORVNWM0lQc3NDVUNXVTREbWdqVm9jeC8vcm11WDFVa1VDZ1lFQXlCZDcKN2w3bCt0VjZoQlRHRzdZWHVPKzc5NXU5ZU0xQlh6dmFnT2QwdjQ3YTRGUmwyZVhINTd4NkVDdnU4aHErM0FkeAplNFNhN1BiNGEzZlZpanZTMW9ucjBOeWpDUjB0emgzQlM2Wndrdy9zWDJ2SXk1b1VFL0NERzROY0VDbThWY3R2CkNPQ1R6bndUZGkvM2RRc0ZXQUVoUGJ3aVlreGlhVUl6N1NldktSMENnWUVBa2ZEUGJLa3BzaEN4MHZMZ3VUbUoKNHo2cnY5T0sxWGR2OGdrNjJkeXdqRmxUSWpaQ2NSL290WnNuMTZRQ3VBbGcweVBnaXlYTlpYRzRIM0xsZ0FCMQppd25FUU4wLzk2d3hwMEkrYTlBQm5xekFFa2taRFRsT2F4Ly92S3BnbVVzbnZ5SG04VDlUWk0yU3FJTzNwaWNXClRoeG5XR0JQU1lHQWZNYzFpcGxsak9FQ2dZQTNvd2dMMVFsZndPSnJQWmVFZHhLTGt1V1NTUlRiTlQrYktucHMKWTI5OElFM09HTW1sV0JaSTRvaVNYSlQ1YnVScExBeXJDc2xGWUxyY3J4cUtjRzRFeDU3eG1aZ2YzYVF4N3VZagprZWsxaXpUdnAzblMyMG4vN1YyWFZlUlFmanBuSk1VQUUrb2xmU3l3TFZCQ2xFanRHb3RTcmpCbFl0WHViTUVoCmpXcFFKUUtCZ1FEUDFrY2dSZWlRbXV4dTNLR3dWOEdqSVNMQ1k0OGcxQmh4VkxkUHM4RXFnT3ZDQ0ZFb3owNUwKK3ZNR2F0OTFvcVd1dXo3VzlpVEo0NUo2UDFsVC9oLzlKNml3SHAvK1JpTDVwcXpWUlM1b212VW96YlNpYUFsSQpEZzgyVkV3aWtLNFdFNE5CcVpiV09NbHdqRFk4d0dxaXBpZXlYaEtsa3Ftdi9zbVdBVjJnSHc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+    caCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5akNDQWQ2Z0F3SUJBZ0lRZHZlT0p0NjY2ZmpHaDBaS1Q4dkRmVEFOQmdrcWhraUc5dzBCQVFzRkFEQVYKTVJNd0VRWURWUVFERXdwemRtTXRZMkYwTFdOaE1CNFhEVEl3TURJeE1qQTNNRFV4TWxvWERUTXdNREl3T1RBMwpNRFV4TWxvd0ZURVRNQkVHQTFVRUF4TUtjM1pqTFdOaGRDMWpZVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBSjh3WHJDaW5PTksrYUMwdEI1NnBpRkxaWngzNm5QZU5LaXhWY2VheEhrM1p2cmMKN0NqOTh3R00wVDhEbk52ajQwVyt6Z2hibFo0UkNlMkZYc2ZVUVdPSzllV2ZFV2pmbUJ0OElKVWxxOGQyenh5Mwp5OU9XVkY2cDdCT0JtVHZtb1A0YjY1aWlORzQvTGJWRmF2dUxPMGZwcTB6TzVUZFhIeFpIbVlXWkZhdUNERWdzCmF1UCs3ZzA2ZnNMRmhQNGFsMWhRUnpKQ3d1UnhIRFM3UjlBMTlYZU9ncVlSTU1yMXE3QytXNk9zcGd3dklidW0KbnNHcDhOdHplTnppc0VTc01KUDZVd3JVSWVEcnBuc01hSU1MbGpBT092RS9qSlE0TDhaTS95TUMwREtHenF0cApvMmVaUjhMZDN1VndyeGMrSWpadHdEYjVWUW53cHVpa3AyWlp1S01DQXdFQUFhTkNNRUF3RGdZRFZSMFBBUUgvCkJBUURBZ0trTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQkJnZ3JCZ0VGQlFjREFqQVBCZ05WSFJNQkFmOEUKQlRBREFRSC9NQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUFraUJmNE52RktraTVUNzNYWjlZa3Y5ZXVnNzFqOQpqSFUrdUQ5bFRyU3loTDlhMjhUbi8zd24vcDZCa3llZXMrTDZzcHJUUm84ZlZYdWh1NWVycnVBZ2dYU1FWZjRKCktibFlqSStpekkrYWMxa2VVQjZYakZ0WGJPS0FVcTB0bVJnMWJMeEttb1pNTGZCcWxCa2VhTjYrVzNrU2p6T2QKZ2thMzNrTmtsRFM1WEFUN2drSXk1bkJSUHVURzF4RDNJQWFWeDdYa3dKUUJJMEdJM0lnMXVOQXp0MHdQc3lURQpDVmFLQWJSWlNpazZKY0FXaFJSQmtGRTZDTXpJTWtiN2xFbSs0TE1jYjlQVzBFWElkYlZ5TlJoa2tic1dwMDFDCjltZFdDckZtRlBRSHErdnZtSk5BcE0yb1MwQW1DSVlDS0laS2RLNHhaa1NtMno5UUFHNTBYU0ZZCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+
+- apiVersion: admissionregistration.k8s.io/v1beta1
+  kind: MutatingWebhookConfiguration
+  metadata:
+    name: akv2k8s-env-injector-azure-key-vault-env-injector
+  webhooks:
+  - name: pods.azure-key-vault-env-injector.admission.spv.no
+    clientConfig:
+      service:
+        namespace: default
+        name: akv2k8s-env-injector-azure-key-vault-env-injector
+        path: /pods
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5akNDQWQ2Z0F3SUJBZ0lRZHZlT0p0NjY2ZmpHaDBaS1Q4dkRmVEFOQmdrcWhraUc5dzBCQVFzRkFEQVYKTVJNd0VRWURWUVFERXdwemRtTXRZMkYwTFdOaE1CNFhEVEl3TURJeE1qQTNNRFV4TWxvWERUTXdNREl3T1RBMwpNRFV4TWxvd0ZURVRNQkVHQTFVRUF4TUtjM1pqTFdOaGRDMWpZVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBSjh3WHJDaW5PTksrYUMwdEI1NnBpRkxaWngzNm5QZU5LaXhWY2VheEhrM1p2cmMKN0NqOTh3R00wVDhEbk52ajQwVyt6Z2hibFo0UkNlMkZYc2ZVUVdPSzllV2ZFV2pmbUJ0OElKVWxxOGQyenh5Mwp5OU9XVkY2cDdCT0JtVHZtb1A0YjY1aWlORzQvTGJWRmF2dUxPMGZwcTB6TzVUZFhIeFpIbVlXWkZhdUNERWdzCmF1UCs3ZzA2ZnNMRmhQNGFsMWhRUnpKQ3d1UnhIRFM3UjlBMTlYZU9ncVlSTU1yMXE3QytXNk9zcGd3dklidW0KbnNHcDhOdHplTnppc0VTc01KUDZVd3JVSWVEcnBuc01hSU1MbGpBT092RS9qSlE0TDhaTS95TUMwREtHenF0cApvMmVaUjhMZDN1VndyeGMrSWpadHdEYjVWUW53cHVpa3AyWlp1S01DQXdFQUFhTkNNRUF3RGdZRFZSMFBBUUgvCkJBUURBZ0trTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQkJnZ3JCZ0VGQlFjREFqQVBCZ05WSFJNQkFmOEUKQlRBREFRSC9NQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUFraUJmNE52RktraTVUNzNYWjlZa3Y5ZXVnNzFqOQpqSFUrdUQ5bFRyU3loTDlhMjhUbi8zd24vcDZCa3llZXMrTDZzcHJUUm84ZlZYdWh1NWVycnVBZ2dYU1FWZjRKCktibFlqSStpekkrYWMxa2VVQjZYakZ0WGJPS0FVcTB0bVJnMWJMeEttb1pNTGZCcWxCa2VhTjYrVzNrU2p6T2QKZ2thMzNrTmtsRFM1WEFUN2drSXk1bkJSUHVURzF4RDNJQWFWeDdYa3dKUUJJMEdJM0lnMXVOQXp0MHdQc3lURQpDVmFLQWJSWlNpazZKY0FXaFJSQmtGRTZDTXpJTWtiN2xFbSs0TE1jYjlQVzBFWElkYlZ5TlJoa2tic1dwMDFDCjltZFdDckZtRlBRSHErdnZtSk5BcE0yb1MwQW1DSVlDS0laS2RLNHhaa1NtMno5UUFHNTBYU0ZZCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    rules:
+    - operations:
+      - CREATE
+      apiGroups:
+      - "*"
+      apiVersions:
+      - "*"
+      resources:
+      - pods
+    failurePolicy: Fail
+    namespaceSelector:
+      matchLabels:
+        azure-key-vault-env-injection: enabled
+      # matchExpressions:
+      # - key: name
+      #   operator: NotIn
+      #   values:
+      #   - default
+
+
