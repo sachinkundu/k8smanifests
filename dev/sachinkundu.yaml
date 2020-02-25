@@ -5,11 +5,12 @@ metadata:
   name: sachinkundu
   labels:
     name: sachinkundu
+    created-by: sakundu@microsoft.com
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: sachinkundu_ns-full-access
+  name: sachinkundu_ns-full-access 
   namespace: sachinkundu
 rules:
 - apiGroups: ["", "extensions", "apps"]
