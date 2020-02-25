@@ -47,5 +47,5 @@ roleRef:
   name: app1_ns-full-access
 subjects:
 - kind: ServiceAccount
-  namespace: app1:default
-  name: app1
+  namespace: app1
+  name: app1:default
