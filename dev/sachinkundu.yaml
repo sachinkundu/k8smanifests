@@ -33,4 +33,4 @@ roleRef:
 subjects:
 - kind: User
   namespace: sachinkundu
-  name: sakundu@microsoft.com
+  name: e82dcb97-3150-49aa-b1e4-863eb82768a4
