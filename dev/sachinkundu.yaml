@@ -5,7 +5,21 @@ metadata:
   name: sachinkundu
   labels:
     name: sachinkundu
-    created-by: sakundu@microsoft.com
+    created-by: sakunduATmicrosoftDOTcom
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: sachinkundu
+  namespace: sachinkundu
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
+    persistentvolumeclaims: "5"
+    requests.storage: "10Gi"
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
