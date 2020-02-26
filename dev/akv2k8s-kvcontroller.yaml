@@ -1,5 +1,18 @@
 ---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: akv2k8s-kvcontroller-azure-key-vault-controller-env
+  labels:
+    app: azure-key-vault-controller
+    chart: azure-key-vault-controller-0.1.24
+    release: akv2k8s-kvcontroller
+    heritage: Tiller
+data:
+
 ---
+
 # Source: azure-key-vault-controller/templates/rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -13,7 +26,7 @@ metadata:
   name: akv2k8s-kvcontroller-azure-key-vault-controller
   labels:
     app: azure-key-vault-controller
-    chart: azure-key-vault-controller-0.1.23
+    chart: azure-key-vault-controller-0.1.24
     heritage: Tiller
     release: akv2k8s-kvcontroller
 rules:
@@ -60,7 +73,7 @@ metadata:
   name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
   labels:
     app: azure-key-vault-controller
-    chart: azure-key-vault-controller-0.1.23
+    chart: azure-key-vault-controller-0.1.24
     heritage: Tiller
     release: akv2k8s-kvcontroller
 rules:
@@ -80,7 +93,7 @@ metadata:
   name: akv2k8s-kvcontroller-azure-key-vault-controller
   labels:
     app: azure-key-vault-controller
-    chart: azure-key-vault-controller-0.1.23
+    chart: azure-key-vault-controller-0.1.24
     heritage: Tiller
     release: akv2k8s-kvcontroller
 subjects:
@@ -99,7 +112,7 @@ metadata:
   name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
   labels:
     app: azure-key-vault-controller
-    chart: azure-key-vault-controller-0.1.23
+    chart: azure-key-vault-controller-0.1.24
     heritage: Tiller
     release: akv2k8s-kvcontroller
 subjects:
@@ -222,7 +235,7 @@ metadata:
   name: akv2k8s-kvcontroller-azure-key-vault-controller
   labels:
     app: azure-key-vault-controller
-    chart: azure-key-vault-controller-0.1.23
+    chart: azure-key-vault-controller-0.1.24
     release: akv2k8s-kvcontroller
     heritage: Tiller
 spec:

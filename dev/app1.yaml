@@ -36,10 +36,16 @@ rules:
   - cronjobs
   verbs: ["*"]
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app1sa
+  namespace: app1
+---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: app1_sa-app1_ns-full-access
+  name: app1sa-app1ns-full-access
   namespace: app1
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -48,4 +54,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   namespace: app1
-  name: app1:default
+  name: app1sa
