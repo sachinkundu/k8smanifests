@@ -1,0 +1,14 @@
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: appdevs-app1ns-read-access
+  namespace: app1
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app1_ns-read-access
+subjects:
+- kind: Group
+  namespace: app1
+  name: 4dfb40d4-993d-4e13-a67d-eed487c12666
