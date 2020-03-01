@@ -1,4 +1,30 @@
 ---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: allowreadingazure
+spec:
+  volumes:
+    - 'hostPath'
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  # Allowing pods to use Azure
+  allowedHostPaths:
+    - pathPrefix: "/etc/kubernetes/azure.json"
+      readOnly: true # only allow read-only mounts
+---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -8,6 +34,17 @@ rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
   resourceNames: ['restricted']
+  verbs: ['use']
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: psp:readazure
+  namespace: default
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  resourceNames: ['allowreadingazure']
   verbs: ['use']
 ---
 apiVersion: policy/v1beta1
@@ -26,7 +63,6 @@ spec:
     - 'secret'
     - 'downwardAPI'
     - 'persistentVolumeClaim'
-    - 'hostPath'
   hostNetwork: false
   hostIPC: false
   hostPID: false
@@ -45,7 +81,3 @@ spec:
       - min: 1
         max: 65535
   readOnlyRootFilesystem: false
-  # Allowing pods to use Azure
-  allowedHostPaths:
-    - pathPrefix: "/etc/kubernetes/azure.json"
-      readOnly: true # only allow read-only mounts
