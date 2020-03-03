@@ -1,34 +1,34 @@
 ---
-
 apiVersion: v1
+data: null
 kind: Secret
 metadata:
-  name: akv2k8s-kvcontroller-azure-key-vault-controller-env
   labels:
     app: azure-key-vault-controller
     chart: azure-key-vault-controller-0.1.25
-    release: akv2k8s-kvcontroller
     heritage: Tiller
-data:
+    release: akv2k8s-kvcontroller
+  name: akv2k8s-kvcontroller-azure-key-vault-controller-env
+  namespace: app1
 
 ---
-
-# Source: azure-key-vault-controller/templates/rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: akv2k8s-kvcontroller-azure-key-vault-controller
----
+  namespace: app1
 
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
   labels:
     app: azure-key-vault-controller
     chart: azure-key-vault-controller-0.1.25
     heritage: Tiller
     release: akv2k8s-kvcontroller
+  name: akv2k8s-kvcontroller-azure-key-vault-controller
+  namespace: app1
 rules:
 - apiGroups:
   - spv.no
@@ -65,17 +65,18 @@ rules:
   - create
   - update
   - patch
----
 
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
   labels:
     app: azure-key-vault-controller
     chart: azure-key-vault-controller-0.1.25
     heritage: Tiller
     release: akv2k8s-kvcontroller
+  name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
+  namespace: app1
 rules:
 - apiGroups:
   - spv.no
@@ -85,159 +86,167 @@ rules:
   - get
   - list
   - watch
----
 
-kind: ClusterRoleBinding
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
   labels:
     app: azure-key-vault-controller
     chart: azure-key-vault-controller-0.1.25
     heritage: Tiller
     release: akv2k8s-kvcontroller
+  name: akv2k8s-kvcontroller-azure-key-vault-controller
+  namespace: app1
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: akv2k8s-kvcontroller-azure-key-vault-controller
 subjects:
 - kind: ServiceAccount
   name: akv2k8s-kvcontroller-azure-key-vault-controller
-  namespace: default
-roleRef:
-  kind: ClusterRole
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
-  apiGroup: rbac.authorization.k8s.io
----
+  namespace: app1
 
-kind: ClusterRoleBinding
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
-  name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
   labels:
     app: azure-key-vault-controller
     chart: azure-key-vault-controller-0.1.25
     heritage: Tiller
     release: akv2k8s-kvcontroller
-subjects:
-- kind: Group
-  name: system:serviceaccounts
-  apiGroup: rbac.authorization.k8s.io
+  name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
+  namespace: app1
 roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
-  apiGroup: rbac.authorization.k8s.io
----
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts
 
-# Source: azure-key-vault-controller/charts/azure-key-vault-crd/templates/crd.yaml
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: azurekeyvaultsecrets.spv.no
+  annotations:
+    helm.sh/resource-policy: keep
   labels:
     app.kubernetes.io/name: akv2k8s
-  annotations:
-    "helm.sh/resource-policy": keep
+  name: azurekeyvaultsecrets.spv.no
+  namespace: app1
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.vault.name
+    description: Which Azure Key Vault this resource is asosiated with
+    name: Vault
+    type: string
+  - JSONPath: .spec.vault.object.name
+    description: Which Azure Key Vault object this resource is asosiated with
+    name: Vault Object
+    type: string
+  - JSONPath: .status.secretName
+    description: Which Kubernetes Secret this resource is synched with, if any
+    name: Secret Name
+    type: string
+  - JSONPath: .status.lastAzureUpdate
+    description: When this resource was last synched with Azure Key Vault
+    name: Synched
+    type: string
   group: spv.no
   names:
+    categories:
+    - all
     kind: AzureKeyVaultSecret
     listKind: AzureKeyVaultSecretList
     plural: azurekeyvaultsecrets
-    singular: azurekeyvaultsecret
     shortNames:
     - akvs
-    categories:
-    - all
-  additionalPrinterColumns:
-    - name: Vault
-      type: string
-      description: Which Azure Key Vault this resource is asosiated with
-      JSONPath: .spec.vault.name
-    - name: Vault Object
-      type: string
-      description: Which Azure Key Vault object this resource is asosiated with
-      JSONPath: .spec.vault.object.name
-    - name: Secret Name
-      type: string
-      description: Which Kubernetes Secret this resource is synched with, if any
-      JSONPath: .status.secretName
-    - name: Synched
-      type: string
-      description: When this resource was last synched with Azure Key Vault
-      JSONPath: .status.lastAzureUpdate
+    singular: azurekeyvaultsecret
   scope: Namespaced
-  versions: 
-    - name: v1alpha1
-      served: true
-      storage: false
-    - name: v1
-      served: true
-      storage: true
-      
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
       properties:
         spec:
-          required: ['vault']
           properties:
+            output:
+              properties:
+                secret:
+                  properties:
+                    dataKey:
+                      description: The key to use in Kubernetes secret when setting
+                        the value from Azure Keyv Vault object data
+                      type: string
+                    name:
+                      description: Name for Kubernetes secret
+                      type: string
+                    type:
+                      description: Type of Secret in Kubernetes
+                      type: string
+                  required:
+                  - name
+                transform:
+                  items:
+                    type: string
+                  type: array
             vault:
-              required: ['name', 'object']
               properties:
                 name:
-                  type: string
                   description: Name of the Azure Key Vault
+                  type: string
                 object:
-                  required: ['name', 'type']
                   properties:
+                    contentType:
+                      description: Only used when type is multi-key-value-secret.
+                      enum:
+                      - application/x-json
+                      - application/x-yaml
+                      type: string
                     name:
-                      type: string
                       description: The object name in Azure Key Vault
-                    type:
                       type: string
+                    type:
                       description: The type of object in Azure Key Vault
                       enum:
                       - secret
                       - certificate
                       - key
-                      - multi-key-value-secret 
+                      - multi-key-value-secret
+                      type: string
                     version:
-                      type: string
                       description: The object version in Azure Key Vault
-                    contentType:
                       type: string
-                      description: Only used when type is multi-key-value-secret. 
-                      enum:
-                      - application/x-json
-                      - application/x-yaml
-            output:
-              properties:
-                transform:
-                  type: array
-                  items:
-                    type: string
-                secret:
-                  required: ['name']
-                  properties:
-                    name:
-                      type: string
-                      description: Name for Kubernetes secret
-                    type:
-                      type: string
-                      description: Type of Secret in Kubernetes
-                    dataKey:
-                      type: string
-                      description: The key to use in Kubernetes secret when setting the value from Azure Keyv Vault object data
+                  required:
+                  - name
+                  - type
+              required:
+              - name
+              - object
+          required:
+          - vault
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: false
+  - name: v1
+    served: true
+    storage: true
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
   labels:
     app: azure-key-vault-controller
     chart: azure-key-vault-controller-0.1.25
-    release: akv2k8s-kvcontroller
     heritage: Tiller
+    release: akv2k8s-kvcontroller
+  name: akv2k8s-kvcontroller-azure-key-vault-controller
+  namespace: app1
 spec:
   selector:
     matchLabels:
@@ -249,36 +258,35 @@ spec:
         app: azure-key-vault-controller
         release: akv2k8s-kvcontroller
     spec:
-      serviceAccountName: akv2k8s-kvcontroller-azure-key-vault-controller
       containers:
-      - name: azure-keyvault-controller
-        image: "spvest/azure-keyvault-controller:0.1.15"
-        imagePullPolicy: Always
+      - args:
+        - --cloudconfig=/etc/kubernetes/azure.json
         env:
         - name: AZURE_VAULT_NORMAL_POLL_INTERVALS
-          value: "1m"
+          value: 1m
         - name: AZURE_VAULT_EXCEPTION_POLL_INTERVALS
-          value: "10m"
+          value: 10m
         - name: AZURE_VAULT_MAX_FAILURE_ATTEMPTS
           value: "5"
         - name: AAD_POD_BINDING_LABEL
           valueFrom:
             fieldRef:
-              fieldPath:  metadata.labels['aadpodidbinding']
+              fieldPath: metadata.labels['aadpodidbinding']
         - name: CUSTOM_AUTH
           value: "false"
         - name: LOG_LEVEL
-          value: "info"
-        args:
-          - "--cloudconfig=/etc/kubernetes/azure.json"
+          value: info
+        image: spvest/azure-keyvault-controller:0.1.15
+        imagePullPolicy: Always
+        name: azure-keyvault-controller
         volumeMounts:
-          - name: azure-config
-            mountPath: "/etc/kubernetes/azure.json"
-            readOnly: true
+        - mountPath: /etc/kubernetes/azure.json
+          name: azure-config
+          readOnly: true
+      serviceAccountName: akv2k8s-kvcontroller-azure-key-vault-controller
       volumes:
-      - name: azure-config
-        hostPath:
-          path: "/etc/kubernetes/azure.json"
+      - hostPath:
+          path: /etc/kubernetes/azure.json
           type: File
-
+        name: azure-config
 
