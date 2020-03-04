@@ -9,14 +9,14 @@ metadata:
     heritage: Tiller
     release: akv2k8s-kvcontroller
   name: akv2k8s-kvcontroller-azure-key-vault-controller-env
-  namespace: app1
+  namespace: admin
 
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: akv2k8s-kvcontroller-azure-key-vault-controller
-  namespace: app1
+  namespace: admin
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -28,7 +28,7 @@ metadata:
     heritage: Tiller
     release: akv2k8s-kvcontroller
   name: akv2k8s-kvcontroller-azure-key-vault-controller
-  namespace: app1
+  namespace: admin
 rules:
 - apiGroups:
   - spv.no
@@ -76,7 +76,7 @@ metadata:
     heritage: Tiller
     release: akv2k8s-kvcontroller
   name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
-  namespace: app1
+  namespace: admin
 rules:
 - apiGroups:
   - spv.no
@@ -97,7 +97,7 @@ metadata:
     heritage: Tiller
     release: akv2k8s-kvcontroller
   name: akv2k8s-kvcontroller-azure-key-vault-controller
-  namespace: app1
+  namespace: admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -105,7 +105,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: akv2k8s-kvcontroller-azure-key-vault-controller
-  namespace: app1
+  namespace: admin
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -117,7 +117,7 @@ metadata:
     heritage: Tiller
     release: akv2k8s-kvcontroller
   name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
-  namespace: app1
+  namespace: admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -136,7 +136,7 @@ metadata:
   labels:
     app.kubernetes.io/name: akv2k8s
   name: azurekeyvaultsecrets.spv.no
-  namespace: app1
+  namespace: admin
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.vault.name
@@ -246,7 +246,7 @@ metadata:
     heritage: Tiller
     release: akv2k8s-kvcontroller
   name: akv2k8s-kvcontroller-azure-key-vault-controller
-  namespace: app1
+  namespace: admin
 spec:
   selector:
     matchLabels:
