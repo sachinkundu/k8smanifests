@@ -1,13 +1,45 @@
 ---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    app.kubernetes.io/component: env-injector-webhook
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: env-injector-webhook
+      app.kubernetes.io/instance: akv2k8s-kvcontroller
+      app.kubernetes.io/name: env-injector
+
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app: azure-key-vault-controller
-    chart: azure-key-vault-controller-1.1.6
-    heritage: Helm
-    release: akv2k8s-kvcontroller
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: controller
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-controller
+  namespace: admin
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector
   namespace: admin
 
 ---
@@ -16,11 +48,53 @@ data: null
 kind: Secret
 metadata:
   labels:
-    app: azure-key-vault-controller
-    chart: azure-key-vault-controller-1.1.6
-    heritage: Helm
-    release: akv2k8s-kvcontroller
-  name: akv2k8s-kvcontroller-azure-key-vault-controller-env
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: controller
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-controller-env
+  namespace: admin
+
+---
+apiVersion: v1
+data:
+  ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURGVENDQWYyZ0F3SUJBZ0lRZjBBVG1LSUdRSU1BZjUrYnMvSUZsVEFOQmdrcWhraUc5dzBCQVFzRkFEQVYKTVJNd0VRWURWUVFERXdwemRtTXRZMkYwTFdOaE1CNFhEVEl4TURJeU1ERTJOVGsxTWxvWERUTXhNREl4T0RFMgpOVGsxTWxvd0ZURVRNQkVHQTFVRUF4TUtjM1pqTFdOaGRDMWpZVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBT0dZdmNCNGlsQ1NNQlAwRW9yL0hRcEV2RFJhdGRrbnZYSW9GdXFkeFovbDBsaWUKVytEL2VYd0FNSjlhN0MrR1hqUnBSNGtTTXJ1Wm1CNHRCSjhXMndRWFZ3eFVyYitXamxtTVFHNnZQUmxiYVRHdApJaFNZdExObzQ2czlMQzVjWjRoeTd6TlFMUFR2Ly9aa3luUmMveStNQVV3TXBqNXVudFM4bHRubGNMcEcrV2RvClRCMHRQckhvMDIyVFgzMWt2K3JjOUFyNUNoVThNVzd5WGt6Q01TcWVKbjEzWXlyeHREbHNvSEpyekFNeG8rT3YKUHV0MXFkWklGdXR0RG9MbzVZRnRpYjlsRTBlVHA3M0kxdldWTTllaDRKdkFZdUpYOU8ycVJMWFUrMjVsdjVrRApDMGcyQVNoWmt1UndKV2dOWk4rMXU3WldHRHdzQkJtdVRzd2d4VXNDQXdFQUFhTmhNRjh3RGdZRFZSMFBBUUgvCkJBUURBZ0trTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQkJnZ3JCZ0VGQlFjREFqQVBCZ05WSFJNQkFmOEUKQlRBREFRSC9NQjBHQTFVZERnUVdCQlFmRGpGdVcwelZZL1l3TXNCM3Nic3dmOHFnbmpBTkJna3Foa2lHOXcwQgpBUXNGQUFPQ0FRRUF1eHJGQ1BVTUkrNVpYTVptbXl5TDQxYzZtbWdlcWQzOVRqL2E5OWh0U2VXY1Z2R050UDJOCkIwT2xDQ3lKWWhjZUVGak5lU09lRVBTdHFNb05mRHhhK25mYzlFc1NCVVE4bHhiZ1FkQjV1V3Fka0FJS1dqTnkKeVl5dW5RTnJxM2Q0RlorWFZJd0VQMXdkNEMvUWN6NGhNL2l3YmJoTjF5M3c1U3BkQUZCOUZ2WFFkZWlKWlRyQgpxTDZNNDBTWFRSUWt1aThNZERHNVlCVW5NQkwwOHhybGx0RlVCWi9QU1VnZlFFK2hxbG5ocTY3R0NSeHpCT1R4ClQxajdJUlBZM3RNK0F1ZkcweHQ4RWttdGxTc2FEWHRNNkl4M2laR3kzWGN0RE8xTjFib0lQZmczU2g1K2xmL0oKWVV1ZXc4dDhiakRueUhxaXdmZXFNV3R6ajZ3MWRqZkxTZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURxRENDQXBDZ0F3SUJBZ0lSQUtPbU95ck00aDl0VHZUeEdUOUVxZUV3RFFZSktvWklodmNOQVFFTEJRQXcKRlRFVE1CRUdBMVVFQXhNS2MzWmpMV05oZEMxallUQWVGdzB5TVRBeU1qQXhOalU1TlRKYUZ3MHlNekF5TWpBeApOalU1TlRKYU1EVXhNekF4QmdOVkJBTVRLbUZyZGpKck9ITXRhM1pqYjI1MGNtOXNiR1Z5TFdWdWRtbHVhbVZqCmRHOXlMbUZrYldsdUxuTjJZekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dFUEFEQ0NBUW9DZ2dFQkFOUFAKbnJIcnNUUFpaUzJCK3Axay9pWm5HdXcwZ0M5Uy9hRStpR05LZ3FGV3NkMzVBdktWNEYzRFpsdlNMVXRoZyt5egpDQkZYUFhUZ2svSzFVaEdNeEVHOUVPNlFCZ1JQM2drTFhybEcyMjRUbm5OOGxydllEVjJiSWdaRXZXZWFMbGxPCjl2blUraWZnNXhVUlY5S3F2NVQxRFg2cUtUNWFlbXRrY3RyMVV1Yi9TRlhPMTdqdVZRMEIyb3FiVUtPbmpPUFMKSWJoUkRwMFRSeENGYnk5WFdXYUk2ZHNJSzR4SFAvcWdWdTd4c1ZFV3VWRmJmTmRqNjRGcWE1MUFVbkFzM2t4bQp5dGlhdFJqVktCUTdqTDhyVGR5WUVTTGwyekhnVkR4Wm1iZlNZR3JQOFVoa1VXNVovVXdxa2Y4dURrWmhMVWFJCmhBTUN2WXBVaXloV2c5OFBrTmtDQXdFQUFhT0IwakNCenpBT0JnTlZIUThCQWY4RUJBTUNCYUF3SFFZRFZSMGwKQkJZd0ZBWUlLd1lCQlFVSEF3RUdDQ3NHQVFVRkJ3TUNNQXdHQTFVZEV3RUIvd1FDTUFBd0h3WURWUjBqQkJndwpGb0FVSHc0eGJsdE0xV1AyTURMQWQ3RzdNSC9Lb0o0d2J3WURWUjBSQkdnd1pvSTRZV3QyTW1zNGN5MXJkbU52CmJuUnliMnhzWlhJdFpXNTJhVzVxWldOMGIzSXVZV1J0YVc0dWMzWmpMbU5zZFhOMFpYSXViRzlqWVd5Q0ttRnIKZGpKck9ITXRhM1pqYjI1MGNtOXNiR1Z5TFdWdWRtbHVhbVZqZEc5eUxtRmtiV2x1TG5OMll6QU5CZ2txaGtpRwo5dzBCQVFzRkFBT0NBUUVBUU1wM3lLVzFzcG91SWtCUXlMeXFTdzZDZjRjTFlGYnUzdENxUEhGVXF1bUdFZHlMCnkrZGFjSFdROHhPQ09WSklGaVJuelU0c1RpR3puL1JGLzVyUVh4VW83YWxjem5QQUZUOWpOR0szcm1mVWEyU3gKbjF4MFlZSnFLdWFyR2pKdkpYZzZKd0NsZEhMZk00VHkwdkp1TkpGdGxtWUg0ZGppUWIxVzE4cWFHaitpY29rUwpnOWY2d0paNXlvSkJXT3RuNzhEZVVVcWs3bDIrMEpiN3VGWFVTN1pwK3NUcHRyK2MxRU1icG1BTWlVMHArMTdEClNyRklEdi9CQm1sNWZrTHdvWm9WOWhkTUlFdHJMaFdmbTVFNzBlVi9DQ3hnK1B3Wk8zdG9nd3loVmxIZTN5aisKaTlsVFN1Q0liQkZmM0NLZUphbW1laGVXUVN4MXl6TWpUd0VWT3c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+  tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBMDgrZXNldXhNOWxsTFlINm5XVCtKbWNhN0RTQUwxTDlvVDZJWTBxQ29WYXgzZmtDCjhwWGdYY05tVzlJdFMyR0Q3TE1JRVZjOWRPQ1Q4clZTRVl6RVFiMFE3cEFHQkUvZUNRdGV1VWJiYmhPZWMzeVcKdTlnTlhac2lCa1M5WjVvdVdVNzIrZFQ2SitEbkZSRlgwcXEvbFBVTmZxb3BQbHA2YTJSeTJ2VlM1djlJVmM3WAp1TzVWRFFIYWlwdFFvNmVNNDlJaHVGRU9uUk5IRUlWdkwxZFpab2pwMndncmpFYy8rcUJXN3ZHeFVSYTVVVnQ4CjEyUHJnV3ByblVCU2NDemVUR2JLMkpxMUdOVW9GRHVNdnl0TjNKZ1JJdVhiTWVCVVBGbVp0OUpnYXMveFNHUlIKYmxuOVRDcVIveTRPUm1FdFJvaUVBd0s5aWxTTEtGYUQzdytRMlFJREFRQUJBb0lCQVFDZStiVU5xMjVNRVQ0OApndE04Y1VIRVJ4elE3ckxMVWtubFRVOEczelRlclhoQXQ1Wjd4dndvdy9FK3Q2aWhiR2FkTU42OFRUTm1WdTBVCmZQMUZDTmVBMDh3eWtrekJ6Y1JFRzVHVUZGZTc3ZU8rb0dOdVI4SDRZT2lQdGVaSExWVGVXVU5Mem91WGhObE0KV2NFRjhIeHM2K1NlRGs5NGFtWjUxbUhTYjlFeWFFaEMyYkVVQStDd05tVTN6a3VtaTRjTUdFbTFsYi9LSE12YQpyY05SSzQyMTBQdFdsOXFiazZycjdXT3hybzI0UkNyOVE0N0tmYXh5cnVFbHI2MFhRa2JXeHQwUEJnSlZhQSthCmNkK3cwemlvWTBWRlNSKzVLeEVJSHFIdUhrSFFpTXZXcjJNN0ZkTVFFa2JXenZXWm9icE0xU0VydEgvNWc1YUoKRjlEZ1RYZUJBb0dCQVBweDhqUUFBT1lDMWt3SkNaL29raTJaSHJwYTdnN29FVHpsbGZCK3hlL0dGZHlnTXlnTwo2N0J1M01CWWZ3VWRaRGI1eTNrUjBsZ2QwUzRJRDlrcEphTlNXSVI2WlY2ZTFNUlZLdkFFcW5HUEd3MVpnOUYrClhHcTBLRXFpYWNzc1ZCbklNcTlpQkhrcDdJS25VWHlidDlPejVTVURvclVUZFNtK1EzT2tjOFpwQW9HQkFOaUMKVGl0RjNQL3ZkZXp2R3BCcGhpOXR3dDM2c3Iwc3JqSmVqZzdPTjk4S3Fha3Fyb2xOcWJmUjRGUTRlY2oyWlNPVAo2bEpMdEhEQWR1aHMySHZkU0hPY1oySy9qbnpTRHVUd0tTNTYwVUFxdzgxRWV4K0ZsbUJmdFk3ZGN4MzRhZDBpCmQyUzNoY2xORFZ1RHZHSDl1ajBUWWZ6dEtWREU2NWIrMTBKMkdvanhBb0dBUFJiaVQ1RFlwMEoxNTJJaytONlEKR1pOS0RZYjBucW80MmpQZVdTVnpQc09BdmFwT0VDMWpqRXZlaVFTTkowQStHN0xlMFE5cDBaaWtWNmdieFlybAo1V3JHc0xueVZCeEdKZ1hvVFZlMkE3RTJsaEVKdUdZc1FOTGxLUjlvMHVoak0wN0VIa2U0YzUyb1ZVNWU4QmhECnhONFN2TzZnRjY5Qld3ZFFDTHRLaWxFQ2dZRUFzcm0rZFpKU2dTUFhvU013Tm80bHF2bGNwNG5RQ3NIYmV0RDcKUzlXSDRhTVhzd0g4Mm5NMTZ2eGh4cVJvUkREQ0JNQ1I2aVY4YXFjMmdWOTR4YWRCcTg0c3VpT1BLQkx2SUtYdwpHT0poNGlwclFBT0w3OVdDOFVPUXlNS2R5TnZMNkRRUGd5RE1YQVF6UnB4VTRqOWxnZzJDRWh4a3dyd01EcldJClZPRFJ2c0VDZ1lFQTcvaHdJL2dNVXRoU3pzUk5QWFUweFJDUUt3M0hNVVdOaFUvWTBoREF1WjRZS0FmbkNJangKVHRxb3pUZXEyTUhsOWhKK0Q5ZjVvcmpaUWxzbnhHd25XYlFHTFBFVWdnQzRJaDNKa0EzdzFEV1FqT3g2WGwwNAp0MUI1TjF5WUZnM2lmczQzUHdGUGFmQ1F3NUp2R0tQT3BrMXBFMTNEVHRoRmdJVUVNemV0UDc4PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-webhook-tls
+  namespace: admin
+
+---
+apiVersion: v1
+data: null
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-webhook-env
+  namespace: admin
+
+---
+apiVersion: v1
+data: null
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-cabundlecontroller-env
   namespace: admin
 
 ---
@@ -28,11 +102,11 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   labels:
-    app: azure-key-vault-controller
-    chart: azure-key-vault-controller-1.1.6
-    heritage: Helm
-    release: akv2k8s-kvcontroller
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: controller
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-controller
   namespace: admin
 rules:
 - apiGroups:
@@ -76,11 +150,11 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   labels:
-    app: azure-key-vault-controller
-    chart: azure-key-vault-controller-1.1.6
-    heritage: Helm
-    release: akv2k8s-kvcontroller
-  name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: controller
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-controller-reader
   namespace: admin
 rules:
 - apiGroups:
@@ -94,22 +168,110 @@ rules:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-reader
+  namespace: admin
+rules:
+- apiGroups:
+  - spv.no
+  resources:
+  - azurekeyvaultsecrets
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-ca-bundle
+  namespace: admin
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - update
+  - delete
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - update
+  - patch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app: azure-key-vault-controller
-    chart: azure-key-vault-controller-1.1.6
-    heritage: Helm
-    release: akv2k8s-kvcontroller
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: controller
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-controller
   namespace: admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
+  name: akv2k8s-kvcontroller-controller
 subjects:
 - kind: ServiceAccount
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
+  name: akv2k8s-kvcontroller-controller
   namespace: admin
 
 ---
@@ -117,42 +279,171 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app: azure-key-vault-controller
-    chart: azure-key-vault-controller-1.1.6
-    heritage: Helm
-    release: akv2k8s-kvcontroller
-  name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: controller
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-controller-reader
   namespace: admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: akv2k8s-kvcontroller-azure-key-vault-controller-reader
+  name: akv2k8s-kvcontroller-controller-reader
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: Group
   name: system:serviceaccounts
 
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-ca-bundle
+  namespace: admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: akv2k8s-kvcontroller-envinjector-ca-bundle
+subjects:
+- kind: ServiceAccount
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-sa
+  namespace: admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: akv2k8s-kvcontroller-envinjector
+subjects:
+- kind: ServiceAccount
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-reader
+  namespace: admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: akv2k8s-kvcontroller-envinjector-reader
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-ca-bundle
+  namespace: admin
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+  - list
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-ca-bundle
+  namespace: admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: akv2k8s-kvcontroller-envinjector-ca-bundle
+subjects:
+- kind: ServiceAccount
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+spec:
+  ports:
+  - name: azure-keyvault-secrets-webhook
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  - name: azure-keyvault-secrets-webhook-http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app.kubernetes.io/component: env-injector-webhook
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/name: env-injector
+  type: ClusterIP
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: azure-key-vault-controller
-    chart: azure-key-vault-controller-1.1.6
-    heritage: Helm
-    release: akv2k8s-kvcontroller
-  name: akv2k8s-kvcontroller-azure-key-vault-controller
+    app.kubernetes.io/component: akv2k8s-controller
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: controller
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-controller
   namespace: admin
 spec:
   selector:
     matchLabels:
-      app: azure-key-vault-controller
-      release: akv2k8s-kvcontroller
+      app.kubernetes.io/instance: akv2k8s-kvcontroller
+      app.kubernetes.io/name: controller
   template:
     metadata:
       labels:
-        app: azure-key-vault-controller
-        release: akv2k8s-kvcontroller
+        app.kubernetes.io/instance: akv2k8s-kvcontroller
+        app.kubernetes.io/name: controller
     spec:
       containers:
       - args:
@@ -164,6 +455,8 @@ spec:
           value: 10m
         - name: AZURE_VAULT_MAX_FAILURE_ATTEMPTS
           value: "5"
+        - name: RUNNING_INSIDE_AZURE_AKS
+          value: "true"
         - name: CUSTOM_AUTH
           value: "false"
         - name: LOG_LEVEL
@@ -172,15 +465,211 @@ spec:
           value: fmt
         image: spvest/azure-keyvault-controller:1.1.0
         imagePullPolicy: IfNotPresent
-        name: azure-keyvault-controller
+        name: controller
         volumeMounts:
         - mountPath: /etc/kubernetes/azure.json
           name: azure-config
           readOnly: true
-      serviceAccountName: akv2k8s-kvcontroller-azure-key-vault-controller
+      serviceAccountName: akv2k8s-kvcontroller-controller
       volumes:
       - hostPath:
           path: /etc/kubernetes/azure.json
           type: File
         name: azure-config
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: akv2k8s-ca-bundle
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector-ca-bundle
+  namespace: admin
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: akv2k8s-ca-bundle
+      app.kubernetes.io/instance: akv2k8s-kvcontroller
+      app.kubernetes.io/name: env-injector
+  template:
+    metadata:
+      annotations:
+        checksum/config: 3fa5e5e0a838c6ed39859708defbe8f6fabea84915f038883aec427b1763a05a
+      labels:
+        app.kubernetes.io/component: akv2k8s-ca-bundle
+        app.kubernetes.io/instance: akv2k8s-kvcontroller
+        app.kubernetes.io/name: env-injector
+    spec:
+      containers:
+      - args:
+        - --cloudconfig=/etc/kubernetes/azure.json
+        env:
+        - name: AKV_LABEL_NAME
+          value: azure-key-vault-env-injection
+        - name: AKV_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: AKV_SECRET_NAME
+          value: akv2k8s-kvcontroller-envinjector-webhook-tls
+        - name: CA_FILE
+          value: /var/ca-cert/ca.crt
+        - name: CA_CONFIG_MAP_NAME
+          value: akv2k8s-ca
+        - name: LOG_LEVEL
+          value: Info
+        - name: LOG_FORMAT
+          value: fmt
+        image: spvest/ca-bundle-controller:1.1.0
+        imagePullPolicy: IfNotPresent
+        name: ca-bundle-controller
+        volumeMounts:
+        - mountPath: /var/ca-cert
+          name: ca-cert
+      serviceAccountName: akv2k8s-kvcontroller-envinjector
+      volumes:
+      - name: ca-cert
+        secret:
+          defaultMode: 420
+          secretName: akv2k8s-kvcontroller-envinjector-webhook-tls
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: env-injector-webhook
+    app.kubernetes.io/instance: akv2k8s-kvcontroller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: env-injector
+    helm.sh/chart: akv2k8s-1.1.28
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: env-injector-webhook
+      app.kubernetes.io/instance: akv2k8s-kvcontroller
+      app.kubernetes.io/name: env-injector
+  template:
+    metadata:
+      annotations:
+        checksum/config: f4b3b30388d5bd6bb4e4c51fd40629fb93799ec2db0dbc72ae26059846d0976e
+      labels:
+        app.kubernetes.io/component: env-injector-webhook
+        app.kubernetes.io/instance: akv2k8s-kvcontroller
+        app.kubernetes.io/name: env-injector
+    spec:
+      containers:
+      - args:
+        - --version=1.1.10
+        - --versionEnvIage=1.1.1
+        env:
+        - name: PORT
+          value: "443"
+        - name: RUNNING_INSIDE_AZURE_AKS
+          value: "true"
+        - name: TLS_CERT_FILE
+          value: /var/serving-cert/tls.crt
+        - name: TLS_PRIVATE_KEY_FILE
+          value: /var/serving-cert/tls.key
+        - name: TLS_CA_FILE
+          value: /var/serving-cert/ca.crt
+        - name: WEBHOOK_AUTH_SERVICE
+          value: akv2k8s-kvcontroller-envinjector
+        - name: WEBHOOK_AUTH_SERVICE_PORT
+          value: "443"
+        - name: CA_CONFIG_MAP_NAME
+          value: akv2k8s-ca
+        - name: CUSTOM_AUTH
+          value: "false"
+        - name: USE_AUTH_SERVICE
+          value: "true"
+        - name: AZUREKEYVAULT_ENV_IMAGE
+          value: spvest/azure-keyvault-env:1.1.1
+        - name: CLOUD_CONFIG_HOST_PATH
+          value: /etc/kubernetes/azure.json
+        - name: DOCKER_IMAGE_INSPECTION_TIMEOUT
+          value: "20"
+        - name: DOCKER_IMAGE_INSPECTION_USE_ACS_CREDENTIALS
+          value: "true"
+        - name: LOG_LEVEL
+          value: Info
+        - name: LOG_FORMAT
+          value: fmt
+        - name: METRICS_ENABLED
+          value: "false"
+        image: spvest/azure-keyvault-webhook:1.1.10
+        imagePullPolicy: IfNotPresent
+        name: webhook
+        ports:
+        - containerPort: 443
+          name: webhook
+        - containerPort: 80
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 443
+            scheme: HTTPS
+        securityContext:
+          allowPrivilegeEscalation: true
+        volumeMounts:
+        - mountPath: /var/serving-cert
+          name: serving-cert
+        - mountPath: /etc/kubernetes/azure.json
+          name: azureconf
+          readOnly: true
+      serviceAccountName: akv2k8s-kvcontroller-envinjector
+      volumes:
+      - name: serving-cert
+        secret:
+          defaultMode: 420
+          secretName: akv2k8s-kvcontroller-envinjector-webhook-tls
+      - hostPath:
+          path: /etc/kubernetes/azure.json
+          type: File
+        name: azureconf
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: akv2k8s-kvcontroller-envinjector
+  namespace: admin
+webhooks:
+- clientConfig:
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURGVENDQWYyZ0F3SUJBZ0lRZjBBVG1LSUdRSU1BZjUrYnMvSUZsVEFOQmdrcWhraUc5dzBCQVFzRkFEQVYKTVJNd0VRWURWUVFERXdwemRtTXRZMkYwTFdOaE1CNFhEVEl4TURJeU1ERTJOVGsxTWxvWERUTXhNREl4T0RFMgpOVGsxTWxvd0ZURVRNQkVHQTFVRUF4TUtjM1pqTFdOaGRDMWpZVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBT0dZdmNCNGlsQ1NNQlAwRW9yL0hRcEV2RFJhdGRrbnZYSW9GdXFkeFovbDBsaWUKVytEL2VYd0FNSjlhN0MrR1hqUnBSNGtTTXJ1Wm1CNHRCSjhXMndRWFZ3eFVyYitXamxtTVFHNnZQUmxiYVRHdApJaFNZdExObzQ2czlMQzVjWjRoeTd6TlFMUFR2Ly9aa3luUmMveStNQVV3TXBqNXVudFM4bHRubGNMcEcrV2RvClRCMHRQckhvMDIyVFgzMWt2K3JjOUFyNUNoVThNVzd5WGt6Q01TcWVKbjEzWXlyeHREbHNvSEpyekFNeG8rT3YKUHV0MXFkWklGdXR0RG9MbzVZRnRpYjlsRTBlVHA3M0kxdldWTTllaDRKdkFZdUpYOU8ycVJMWFUrMjVsdjVrRApDMGcyQVNoWmt1UndKV2dOWk4rMXU3WldHRHdzQkJtdVRzd2d4VXNDQXdFQUFhTmhNRjh3RGdZRFZSMFBBUUgvCkJBUURBZ0trTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQkJnZ3JCZ0VGQlFjREFqQVBCZ05WSFJNQkFmOEUKQlRBREFRSC9NQjBHQTFVZERnUVdCQlFmRGpGdVcwelZZL1l3TXNCM3Nic3dmOHFnbmpBTkJna3Foa2lHOXcwQgpBUXNGQUFPQ0FRRUF1eHJGQ1BVTUkrNVpYTVptbXl5TDQxYzZtbWdlcWQzOVRqL2E5OWh0U2VXY1Z2R050UDJOCkIwT2xDQ3lKWWhjZUVGak5lU09lRVBTdHFNb05mRHhhK25mYzlFc1NCVVE4bHhiZ1FkQjV1V3Fka0FJS1dqTnkKeVl5dW5RTnJxM2Q0RlorWFZJd0VQMXdkNEMvUWN6NGhNL2l3YmJoTjF5M3c1U3BkQUZCOUZ2WFFkZWlKWlRyQgpxTDZNNDBTWFRSUWt1aThNZERHNVlCVW5NQkwwOHhybGx0RlVCWi9QU1VnZlFFK2hxbG5ocTY3R0NSeHpCT1R4ClQxajdJUlBZM3RNK0F1ZkcweHQ4RWttdGxTc2FEWHRNNkl4M2laR3kzWGN0RE8xTjFib0lQZmczU2g1K2xmL0oKWVV1ZXc4dDhiakRueUhxaXdmZXFNV3R6ajZ3MWRqZkxTZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    service:
+      name: akv2k8s-kvcontroller-envinjector
+      namespace: admin
+      path: /pods
+  failurePolicy: Fail
+  name: pods.env-injector.admission.spv.no
+  namespaceSelector:
+    matchExpressions:
+    - key: name
+      operator: NotIn
+      values:
+      - kube-system
+    - key: name
+      operator: NotIn
+      values:
+      - admin
+    matchLabels:
+      azure-key-vault-env-injection: enabled
+  rules:
+  - apiGroups:
+    - '*'
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    resources:
+    - pods
 
