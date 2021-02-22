@@ -5,9 +5,10 @@ metadata:
   name: app1
   labels:
     name: app1
+    azure-key-vault-env-injection: enabled
 ---
 kind: Role
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: app1_ns-read-access 
   namespace: app1
@@ -22,7 +23,7 @@ rules:
   verbs: ["get", "watch", "list"]
 ---
 kind: Role
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: app1_ns-full-access 
   namespace: app1
@@ -43,7 +44,7 @@ metadata:
   namespace: app1
 ---
 kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: app1sa-app1ns-full-access
   namespace: app1
